@@ -21,8 +21,6 @@ services:
         limits:
           cpus: '0.3'
           memory: '200MB'
-    networks:
-      - app-network
 
   api2:
     image: rinha-service:latest
@@ -43,8 +41,6 @@ services:
         limits:
           cpus: '0.3'
           memory: '200MB'
-    networks:
-      - app-network
 
   nginx:
     image: nginx:latest
@@ -60,12 +56,22 @@ services:
         limits:
           cpus: '0.1'
           memory: '10MB'
-    networks:
-      - app-network
 
   postgres:
     image: postgres:latest
-    command: postgres -c 'max_connections=600'
+    command: [
+      'postgres',
+      '-c',
+      'max_connections=800',
+      '-c',
+      'shared_buffers=128MB',
+      '-c',
+      'synchronous_commit=off',
+      '-c',
+      'fsync=off',
+      '-c',
+      'full_page_writes=off',
+    ]
     user: postgres
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready" ]
@@ -86,8 +92,8 @@ services:
         limits:
           cpus: '0.8'
           memory: '140MB'
-    networks:
-      - app-network
 
 networks:
-  app-network:
+  default:
+    driver: bridge
+    name: rinha-nginx-2024q1-host

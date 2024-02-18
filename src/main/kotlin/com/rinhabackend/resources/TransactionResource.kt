@@ -1,30 +1,35 @@
 package com.rinhabackend.resources
 
-import com.rinhabackend.domain.*
+import com.rinhabackend.domain.TransactionAssembler
+import com.rinhabackend.domain.TransactionRequest
+import com.rinhabackend.domain.TransactionStatement
+import com.rinhabackend.domain.TransactionType
 import com.rinhabackend.repository.ClientRepository
 import com.rinhabackend.repository.TransactionRepository
 import jakarta.transaction.Transactional
+import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Component
 import org.springframework.web.bind.annotation.*
-import org.springframework.web.client.HttpStatusCodeException
 import kotlin.jvm.optionals.getOrNull
 
 @RestController
+@RequestMapping("/clientes")
 class TransactionResource(
     private val transactionService: TransactionService
 ) {
 
-    @PostMapping("/clientes/{clienteId}/transacoes")
+    @PostMapping("/{id}/transacoes")
     @ResponseStatus(HttpStatus.OK)
-    fun createTransaction(@RequestBody request: TransactionRequest, @PathVariable clienteId: Long) {
-        transactionService.createTransaction(request, clienteId);
+    fun createTransaction(@RequestBody @Valid request: TransactionRequest, @PathVariable id: Long) {
+        transactionService.createTransaction(request, id);
     }
 
-    @GetMapping("/clientes/{clienteId}/extrato")
+    @GetMapping("/{id}/extrato")
     @ResponseStatus(HttpStatus.OK)
-    fun getTransactions(@PathVariable clienteId: Long): TransactionStatement {
-        return transactionService.getTransactions(clienteId)
+    fun getTransactions(@PathVariable id: Long): ResponseEntity<TransactionStatement> {
+        return ResponseEntity.ok(transactionService.getTransactions(id))
     }
 }
 
@@ -38,7 +43,7 @@ class TransactionService(
     fun createTransaction(request: TransactionRequest, clientId: Long) {
         val apply = clientRepository.findById(clientId).getOrNull()
             ?.apply {
-                if (request.type == TransactionType.d) {
+                if (request.type == TransactionType.d.name) {
                     this.addDebit(request.value)
                 } else {
                     this.addCredit(request.value)

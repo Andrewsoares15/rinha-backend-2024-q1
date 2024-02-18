@@ -35,30 +35,29 @@ class TransactionEntity(
     val client: ClientEntity? = null
 )
 
-
 @Service
 class TransactionAssembler {
     fun toTransactionEntity(transaction: TransactionRequest, clientId: Long): TransactionEntity {
         return TransactionEntity(
             clientId = clientId,
             value = transaction.value,
-            type = transaction.type,
-            description = transaction.description
+            type = TransactionType.valueOf(transaction.type!!),
+            description = transaction.description!!
         )
     }
 
     fun toTransactionResponse(client: ClientEntity, transactions: List<TransactionEntity>): TransactionStatement {
         return TransactionStatement(
-            balance = Balance(
+            saldo = Balance(
                 total = client.balance,
-                limit = client.limite
+                limite = client.limite
             ),
-            transactions = transactions.map {
+            ultimas_transacoes = transactions.map {
                 Transaction(
-                    value = it.value,
-                    type = it.type,
-                    description = it.description,
-                    datTransaction = it.dateCreation!!
+                    valor = it.value,
+                    tipo = it.type,
+                    descricao = it.description,
+                    realizada_em = it.dateCreation!!
                 )
             }
         )
