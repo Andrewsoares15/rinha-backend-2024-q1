@@ -10,12 +10,11 @@ interface TransactionRepository : CrudRepository<TransactionEntity, Long> {
 
     @Query(value = """
         SELECT t.* FROM MOVEMENTS t
-        LEFT JOIN CLIENT c ON t.IDT_CLIENT = c.IDT_CLIENT
         WHERE t.IDT_CLIENT= :id
         ORDER BY t.DAT_CREATION DESC
         LIMIT 10
         """, nativeQuery = true
     )
-    fun findClientsByIdWith10LatestTransactions(id: Long): List<TransactionEntity>
+    fun findByClientId10LatestTransactions(id: Long): List<TransactionEntity>
 
 }

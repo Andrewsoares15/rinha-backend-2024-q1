@@ -47,13 +47,13 @@ class TransactionAssembler {
         )
     }
 
-    fun toTransactionResponse(transactionEntity: List<TransactionEntity>): TransactionStatement {
+    fun toTransactionResponse(client: ClientEntity, transactions: List<TransactionEntity>): TransactionStatement {
         return TransactionStatement(
             balance = Balance(
-                total = transactionEntity.first().client!!.balance,
-                limit = transactionEntity.first().client!!.limite
+                total = client.balance,
+                limit = client.limite
             ),
-            transactions = transactionEntity.map {
+            transactions = transactions.map {
                 Transaction(
                     value = it.value,
                     type = it.type,

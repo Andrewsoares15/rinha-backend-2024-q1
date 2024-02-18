@@ -3,9 +3,11 @@ package com.rinhabackend.resources
 import com.rinhabackend.domain.*
 import com.rinhabackend.repository.ClientRepository
 import com.rinhabackend.repository.TransactionRepository
+import jakarta.transaction.Transactional
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.client.HttpStatusCodeException
 import kotlin.jvm.optionals.getOrNull
 
 @RestController
@@ -14,13 +16,13 @@ class TransactionResource(
 ) {
 
     @PostMapping("/clientes/{clienteId}/transacoes")
-    @ResponseStatus(HttpStatus.CREATED)
+    @ResponseStatus(HttpStatus.OK)
     fun createTransaction(@RequestBody request: TransactionRequest, @PathVariable clienteId: Long) {
         transactionService.createTransaction(request, clienteId);
-
     }
 
     @GetMapping("/clientes/{clienteId}/extrato")
+    @ResponseStatus(HttpStatus.OK)
     fun getTransactions(@PathVariable clienteId: Long): TransactionStatement {
         return transactionService.getTransactions(clienteId)
     }
@@ -37,18 +39,22 @@ class TransactionService(
         val apply = clientRepository.findById(clientId).getOrNull()
             ?.apply {
                 if (request.type == TransactionType.d) {
-                    this.balance = this.balance.minus(request.value)
+                    this.addDebit(request.value)
                 } else {
-                    this.balance = this.balance.plus(request.value)
+                    this.addCredit(request.value)
                 }
-                this.transactions = mutableSetOf(transactionAssembler.toTransactionEntity(request, clientId))
+                this.addTransaction(transactionAssembler.toTransactionEntity(request, clientId))
 
-            } ?: throw Exception("Cliente não encontrado")
+            } ?: throw ClientNotFoundException()
 
         clientRepository.save(apply)
     }
 
+    @Transactional
     fun getTransactions(clientId: Long): TransactionStatement {
-        return transactionAssembler.toTransactionResponse(transactionRepository.findClientsByIdWith10LatestTransactions(clientId))
+        clientRepository.findById(clientId).getOrNull()?.let {
+            val latestTransactions = transactionRepository.findByClientId10LatestTransactions(clientId)
+            return transactionAssembler.toTransactionResponse(it, latestTransactions)
+        } ?: throw ClientNotFoundException()
     }
 }
