@@ -14,7 +14,7 @@ class TransactionEntity(
     val id: Long? = null,
 
     @Column(name = "NUM_VALUE")
-    val value: Long,
+    val value: Int,
 
     @Column(name = "NAM_TYPE")
     @Enumerated(EnumType.STRING)

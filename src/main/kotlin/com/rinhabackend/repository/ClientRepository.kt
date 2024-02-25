@@ -1,9 +1,12 @@
 package com.rinhabackend.repository
 
 import com.rinhabackend.domain.ClientEntity
-import jakarta.annotation.Nullable
+import jakarta.persistence.LockModeType
+import org.springframework.data.jpa.repository.Lock
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.CrudRepository
+import org.springframework.transaction.annotation.Transactional
+import java.util.*
 
 interface ClientRepository : CrudRepository<ClientEntity, Long> {
 
@@ -20,4 +23,8 @@ interface ClientRepository : CrudRepository<ClientEntity, Long> {
         """, nativeQuery = true
     )
     fun findClientsByIdWith10LatestTransactions(id: Long): ClientEntity?
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT c FROM ClientEntity c WHERE c.id = :id")
+    fun findClientById(id: Long): Optional<ClientEntity>
 }

@@ -1,18 +1,22 @@
 package com.rinhabackend.domain
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import jakarta.validation.constraints.Max
+import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotNull
 import jakarta.validation.constraints.Size
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Primary
 import java.time.LocalDateTime
 
 class TransactionRequest(
     @JsonProperty("valor")
     @field:NotNull(message = "value must be provided")
     @field:Min(value = 1, message = "value cannot be equal or less than 0")
-    val value: Long,
+    val value: Int,
 
     @JsonProperty("descricao")
     @field:NotNull(message = "description must be provided")
@@ -32,14 +36,24 @@ data class TransactionStatement(
 )
 
 data class Transaction(
-    val valor: Long,
+    val valor: Int,
     val tipo: TransactionType,
     val descricao: String,
     val realizada_em: LocalDateTime
 )
 
 data class Balance(
-    val total: Long,
+    val total: Int,
     val data_extrato: LocalDateTime = LocalDateTime.now(),
-    val limite: Long
+    val limite: Int
 )
+
+@Configuration
+class ObjectMapperConfig {
+    @Bean
+    @Primary
+    fun objectMapper(): ObjectMapper {
+        return ObjectMapper().findAndRegisterModules()
+            .disable(DeserializationFeature.ACCEPT_FLOAT_AS_INT)
+    }
+}

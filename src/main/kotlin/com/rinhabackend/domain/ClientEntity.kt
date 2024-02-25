@@ -16,10 +16,10 @@ class ClientEntity(
     val name: String,
 
     @Column(name = "LIMITE")
-    val limite: Long,
+    val limite: Int,
 
     @Column(name = "BALANCE")
-    var balance: Long,
+    var balance: Int,
 
     @OneToMany(mappedBy = "client", fetch = FetchType.LAZY, cascade = [CascadeType.MERGE])
     var transactions: MutableSet<TransactionEntity> = mutableSetOf()
@@ -29,14 +29,14 @@ class ClientEntity(
         transactions = mutableSetOf(transaction)
     }
 
-    fun addDebit(amount: Long) {
+    fun addDebit(amount: Int) {
         this.balance = this.balance.minus(amount)
         if (balance.absoluteValue > limite) {
             throw BalanceLimitExceededException()
         }
     }
 
-    fun addCredit(amount: Long) {
+    fun addCredit(amount: Int) {
         this.balance = this.balance.plus(amount)
     }
 }

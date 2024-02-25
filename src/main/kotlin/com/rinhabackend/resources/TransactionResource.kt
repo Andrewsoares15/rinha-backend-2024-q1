@@ -6,13 +6,12 @@ import com.rinhabackend.domain.TransactionStatement
 import com.rinhabackend.domain.TransactionType
 import com.rinhabackend.repository.ClientRepository
 import com.rinhabackend.repository.TransactionRepository
-import jakarta.transaction.Transactional
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Component
+import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.bind.annotation.*
-import kotlin.jvm.optionals.getOrNull
 
 @RestController
 @RequestMapping("/clientes")
@@ -22,13 +21,19 @@ class TransactionResource(
 
     @PostMapping("/{id}/transacoes")
     @ResponseStatus(HttpStatus.OK)
-    fun createTransaction(@RequestBody @Valid request: TransactionRequest, @PathVariable id: Long) {
-        transactionService.createTransaction(request, id);
+    fun createTransaction(@RequestBody @Valid request: TransactionRequest, @PathVariable id: Long):  ResponseEntity<Saldo> {
+        if (id > 5) {
+            throw ClientNotFoundException()
+        }
+        return ResponseEntity.ok(transactionService.createTransaction(request, id))
     }
 
     @GetMapping("/{id}/extrato")
     @ResponseStatus(HttpStatus.OK)
     fun getTransactions(@PathVariable id: Long): ResponseEntity<TransactionStatement> {
+        if (id > 5) {
+            throw ClientNotFoundException()
+        }
         return ResponseEntity.ok(transactionService.getTransactions(id))
     }
 }
@@ -40,26 +45,34 @@ class TransactionService(
     private val transactionAssembler: TransactionAssembler
 ) {
 
-    fun createTransaction(request: TransactionRequest, clientId: Long) {
-        val apply = clientRepository.findById(clientId).getOrNull()
-            ?.apply {
-                if (request.type == TransactionType.d.name) {
+    @Transactional
+    fun createTransaction(request: TransactionRequest, clientId: Long): Saldo {
+        val apply = clientRepository.findClientById(clientId).get().apply {
+            when (request.type) {
+                TransactionType.d.name -> {
                     this.addDebit(request.value)
-                } else {
+                }
+
+                TransactionType.c.name -> {
                     this.addCredit(request.value)
                 }
-                this.addTransaction(transactionAssembler.toTransactionEntity(request, clientId))
+            }
+            this.addTransaction(transactionAssembler.toTransactionEntity(request, clientId))
 
-            } ?: throw ClientNotFoundException()
-
-        clientRepository.save(apply)
+            clientRepository.save(this)
+        }
+        return  Saldo(apply.limite, apply.balance)
     }
 
-    @Transactional
     fun getTransactions(clientId: Long): TransactionStatement {
-        clientRepository.findById(clientId).getOrNull()?.let {
+        clientRepository.findById(clientId).get().let {
             val latestTransactions = transactionRepository.findByClientId10LatestTransactions(clientId)
             return transactionAssembler.toTransactionResponse(it, latestTransactions)
-        } ?: throw ClientNotFoundException()
+        }
     }
 }
+
+data class Saldo(
+    val limite: Int,
+    val saldo: Int,
+)
