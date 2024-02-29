@@ -1,9 +1,11 @@
-FROM openjdk:21
+FROM ubuntu:24.04
 
 MAINTAINER Andrew Soares
 
-COPY build/libs/demo-0.0.1-SNAPSHOT.jar app.jar
+COPY build/native/nativeCompile/rinha /server
+
+RUN apt-get update && apt-get install -y zlib1g
 
 EXPOSE	8000
 
-ENTRYPOINT [ "java", "-XX:+UseParallelGC", "-XX:MaxRAMPercentage=75", "--enable-preview", "-jar", "app.jar" ]
+CMD ["/server","-Xms64m","-Xmx64m","-ea","-server"]
