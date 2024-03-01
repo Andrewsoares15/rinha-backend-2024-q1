@@ -60,6 +60,9 @@
     "interfaces":["org.hibernate.SessionFactory","org.springframework.orm.jpa.EntityManagerFactoryInfo"]
   },
   {
+    "interfaces":["org.hibernate.query.sql.spi.NativeQueryImplementor","org.hibernate.query.spi.DomainQueryExecutionContext","org.hibernate.query.internal.ResultSetMappingResolutionContext","org.hibernate.query.spi.QueryImplementor","org.hibernate.query.SelectionQuery","org.hibernate.query.CommonQueryContract"]
+  },
+  {
     "interfaces":["org.springframework.beans.factory.annotation.Qualifier"]
   },
   {
